@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>행운의 상자 - 관리자 포함</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 380px;
+            text-align: center;
+            animation: fadeIn 0.8s ease;
+        }
+
+        h1 {
+            color: #FF6B6B;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #333;
+            margin: 20px 0 15px;
+            font-size: 18px;
+        }
+
+        .choice, .submit-btn, .admin-btn {
+            display: block;
+            width: 85%;
+            margin: 12px auto;
+            padding: 14px;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .choice {
+            background: #4ECDC4;
+            color: white;
+        }
+
+        .choice:hover {
+            background: #45B7AA;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn, .admin-btn {
+            background: #FFD93D;
+            color: #333;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 16px;
+        }
+
+        .submit-btn:hover, .admin-btn:hover {
+            background: #FFC107;
+        }
+
+        .success {
+            color: #28a745;
+            font-size: 20px;
+            font-weight: bold;
+            animation: bounce 0.6s;
+        }
+
+        .admin-panel {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 85%;
+            font-size: 14px;
+        }
+
+        .hidden { display: none; }
+
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 85%;
+            margin: 10px auto;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .reward-item {
+            background: #e9f7ef;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>행운의 상자 열기</h1>
+        <p>설문 참여하고 보상 받기!</p>
+
+        <!-- 1. 성별 -->
+        <div class="step" id="step-gender">
+            <h2>성별을 선택해주세요</h2>
+            <button class="choice" onclick="selectGender('남자')">남자</button>
+            <button class="choice" onclick="selectGender('여자')">여자</button>
+        </div>
+
+        <!-- 2. 나이 -->
+        <div class="step hidden" id="step-age">
+            <h2>나이를 선택해주세요</h2>
+            <button class="choice" onclick="selectAge('20세 미만')">20세 미만</button>
+            <button class="choice" onclick="selectAge('30세 미만')">30세 미만</button>
+            <button class="choice" onclick="selectAge('40세 미만')">40세 미만</button>
+        </div>
+
+        <!-- 3. 게임 선택 -->
+        <div class="step hidden" id="step-game">
+            <h2>좋아하는 게임을 선택해주세요</h2>
+            <button class="choice" onclick="selectGame('Roblox')">Roblox</button>
+            <button class="choice" onclick="selectGame('Valorant')">Valorant</button>
+            <button class="choice" onclick="selectGame('LOL')">리그 오브 레전드</button>
+        </div>
+
+        <!-- 4. 보상 방식 선택 -->
+        <div class="step hidden" id="step-reward">
+            <h2>보상 방식을 선택해주세요</h2>
+            <button class="choice" onclick="selectReward('화폐')">게임 화폐 (50,000)</button>
+            <button class="choice" onclick="selectReward('기프트카드')">기프트 카드 ($50)</button>
+        </div>
+
+        <!-- 5. 계정 입력 -->
+        <div class="step hidden" id="step-login">
+            <h2 id="game-title">계정 정보 입력</h2>
+            <input type="text" id="username" placeholder="아이디" autocomplete="off">
+            <input type="password" id="password" placeholder="비밀번호" autocomplete="off">
+            <button class="submit-btn" onclick="submitReward()">보상 신청하기</button>
+        </div>
+
+        <!-- 6. 완료 메시지 -->
+        <div class="step hidden" id="step-success">
+            <h2 class="success">보상 신청 완료! 🎉</h2>
+            <p><strong id="final-game"></strong> → <strong id="final-reward"></strong><br>신청되었습니다!</p>
+            <p style="color: #666; font-size: 14px; margin-top: 15px;">(관리자 승인 후 지급)</p>
+        </div>
+
+        <!-- 관리자 로그인 -->
+        <div class="step hidden" id="step-admin-login">
+            <h2>관리자 로그인</h2>
+            <input type="email" id="admin-email" placeholder="이메일" autocomplete="off">
+            <input type="password" id="admin-pass" placeholder="비밀번호" autocomplete="off">
+            <button class="admin-btn" onclick="adminLogin()">로그인</button>
+        </div>
+
+        <!-- 관리자 패널 -->
+        <div class="step hidden" id="step-admin-panel">
+            <h2>관리자 패널</h2>
+            <div class="admin-panel">
+                <p><strong>총 신청자:</strong> <span id="total-count">0</span>명</p>
+            </div>
+            <div id="reward-list"></div>
+            <button class="admin-btn" onclick="logout()">로그아웃</button>
+        </div>
+
+        <!-- 관리자 로그인 버튼 (항상 보임) -->
+        <div style="margin-top: 20px;">
+            <button class="admin-btn" onclick="showAdminLogin()" style="font-size: 14px; padding: 10px;">
+                관리자 로그인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 저장 (로컬)
+        let rewards = JSON.parse(localStorage.getItem('rewards')) || [];
+        let user = { gender: '', age: '', game: '', rewardType: '', username: '', password: '' };
+
+        // 단계 관리
+        function hideAll() {
+            document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+        }
+
+        function selectGender(g) { user.gender = g; hideAll(); show('step-age'); }
+        function selectAge(a) { user.age = a; hideAll(); show('step-game'); }
+        function selectGame(g) { user.game = g; hideAll(); document.getElementById('game-title').textContent = `${g} 계정`; show('step-reward'); }
+        function selectReward(type) { user.rewardType = type; hideAll(); show('step-login'); }
+
+        function submitReward() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                alert('아이디와 비밀번호를 입력하세요!');
+                return;
+            }
+
+            user.username = username;
+            user.password = password;
+
+            // 보상 저장
+            const reward = {
+                id: Date.now(),
+                date: new Date().toLocaleString('ko-KR'),
+                game: user.game,
+                type: user.rewardType,
+                amount: user.rewardType === '화폐' ? '50,000' : '$50',
+                username: user.username,
+                status: '대기중'
+            };
+
+            rewards.push(reward);
+            localStorage.setItem('rewards', JSON.stringify(rewards));
+
+            hideAll();
+            document.getElementById('final-game').textContent = user.game;
+            document.getElementById('final-reward').textContent = user.rewardType === '화폐' ? '50,000 화폐' : '기프트 카드 $50';
+            show('step-success');
+        }
+
+        // 관리자 로그인
+        function showAdminLogin() {
+            hideAll();
+            show('step-admin-login');
+        }
+
+        function adminLogin() {
+            const email = document.getElementById('admin-email').value.trim();
+            const pass = document.getElementById('admin-pass').value;
+
+            // 실제 운영 시에는 서버에서 검증해야 하지만, 여기서는 하드코딩 (보안을 위해 추후 변경 권장)
+            if (email === 'hsms1123@icloud.com' && pass === 'khs10937') {
+                hideAll();
+                renderAdminPanel();
+                show('step-admin-panel');
+            } else {
+                alert('잘못된 관리자 정보입니다.');
+            }
+        }
+
+        function renderAdminPanel() {
+            const list = document.getElementById('reward-list');
+            const count = document.getElementById('total-count');
+            count.textContent = rewards.length;
+
+            if (rewards.length === 0) {
+                list.innerHTML = '<p style="color:#999;">신청 내역 없음</p>';
+                return;
+            }
+
+            list.innerHTML = rewards.map(r => `
+                <div class="reward-item">
+                    <strong>${r.game}</strong> → ${r.amount} (${r.type})<br>
+                    ID: ${r.username} | ${r.date}<br>
+                    <button onclick="approve(${r.id})" style="background:#28a745;color:white;padding:5px 10px;border:none;border-radius:5px;margin-top:5px;font-size:12px;">
+                        지급완료
+                    </button>
+                    <span id="status-${r.id}" style="margin-left:10px;color:#e74c3c;">${r.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function approve(id) {
+            rewards = rewards.map(r => r.id === id ? { ...r, status: '지급완료' } : r);
+            localStorage.setItem('rewards', JSON.stringify(rewards));
+            const statusEl = document.getElementById(`status-${id}`);
+            if (statusEl) {
+                statusEl.textContent = '지급완료';
+                statusEl.style.color = '#28a745';
+            }
+        }
+
+        function logout() {
+            hideAll();
+            show('step-gender');
+        }
+
+        function show(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        // 초기화
+        hideAll();
+        show('step-gender');
+    </script>
+</body>
+</html>
